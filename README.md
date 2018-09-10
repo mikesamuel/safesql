@@ -32,7 +32,7 @@ appear.
 <!-- /TOC -->
 
 
-## Usage By Example        <span id="usage"></span>
+## Usage By Example        <a name="usage"></a>
 
 <!--
 
@@ -89,7 +89,7 @@ The output of <tt>sql\`...\`</tt> has type *SqlFragment* (from
 `require('safesql/fragment')`) so the `NOW()` function call is not
 re-escaped when used in `${data}`.
 
-### <span id="sql-returns-sqlfragment">  `sql` returns a *SqlFragment*  </span>
+### `sql` returns a *SqlFragment*        <a name="sql-returns-sqlfragment"></a>
 
 Since `sql` returns a *SqlFragment* you can chain uses:
 
@@ -102,7 +102,7 @@ console.log(sql`SELECT * FROM TABLE ${whereClause}`)
 // SELECT * FROM TABLE WHERE `a` = 1
 ```
 
-### No excess quotes        <span id="minimal-quotes"></span>
+### No excess quotes        <a name="minimal-quotes"></a>
 
 An interpolation in a quoted string will not insert excess quotes:
 
@@ -115,7 +115,7 @@ console.log(sql`SELECT ${ 'foo' } `)
 // SELECT 'foo'
 ```
 
-### Escaped backticks delimit SQL identifiers        <span id="escaped-backticks"></span>
+### Escaped backticks delimit SQL identifiers        <a name="escaped-backticks"></a>
 
 Backticks end a template tag, so you need to escape backticks.
 
@@ -126,7 +126,7 @@ console.log(sql`SELECT \`${ 'id' }\` FROM \`TABLE\``)
 // SELECT `id` FROM `TABLE`
 ```
 
-### Escape Sequences are Raw        <span id="raw-escapes"></span>
+### Escape Sequences are Raw        <a name="raw-escapes"></a>
 
 Other escape sequences are raw.
 
@@ -137,7 +137,7 @@ console.log(sql`SELECT "\n"`)
 // SELECT "\n"
 ```
 
-## API        <span id="API"></span>
+## API        <a name="API"></a>
 
 Assuming
 
@@ -147,7 +147,7 @@ const { SqlFragment } = require('safesql/fragment')
 const { SqlId } = require('safesql/id')
 ```
 
-### sql(options)        <span id="sql-options"></span>
+### sql(options)        <a name="sql-options"></a>
 
 When called with an options bundle instead of as a template tag, `sql`
 returns a template tag that uses those options.
@@ -164,7 +164,7 @@ console.log(sql({ timeZone })`SELECT ${date}`)
 // SELECT '2000-01-01 00:00:00.000'
 ```
 
-### sql\`...\`         <span id="sql-as-tag"></span>
+### sql\`...\`         <a name="sql-as-tag"></a>
 
 When used as a template tag, chooses an appropriate escaping
 convention for each `${...}` based on the context in which it appears.
@@ -174,7 +174,7 @@ matched the following grammar:
 
 [![Railroad Diagram](docs/sql-railroad.svg)](docs/sql-railroad.svg)
 
-### SqlFragment       <span id="class-SqlFragment"></span>
+### SqlFragment       <a name="class-SqlFragment"></a>
 
 *SqlFragment* is a [Mintable][] class that represents fragments of SQL
 that are safe to send to a database.
@@ -182,7 +182,7 @@ that are safe to send to a database.
 See [minting][] for example on how to create instances, and why this is a
 tad more involved than just using `new`.
 
-### SqlId       <span id="class-SqlId"></span>
+### SqlId       <a name="class-SqlId"></a>
 
 *SqlId* is a [Mintable][] class that represents a SQL identifier.
 

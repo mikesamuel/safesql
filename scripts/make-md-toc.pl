@@ -10,7 +10,7 @@ foreach my $path (@ARGV) {
 
     my $lastDepth = 0;
     while (<$IN>) {
-        if (m/^(\#{2,})(.*?)<span id="([\w-.]+)"><\/span>\s*$/) {
+        if (m/^(\#{2,})(.*?)<a name="([\w-.]+)"><\/a>\s*$/) {
             my $depth = length($1) - 1;
             my $text = $2;
             my $id = $3;
