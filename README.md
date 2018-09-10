@@ -89,7 +89,7 @@ The output of <tt>sql\`...\`</tt> has type *SqlFragment* (from
 `require('safesql/fragment')`) so the `NOW()` function call is not
 re-escaped when used in `${data}`.
 
-### `sql` returns a *SqlFragment*        <span id="sql-returns-sqlfragment"></span>
+### <span id="sql-returns-sqlfragment">  `sql` returns a *SqlFragment*  </span>
 
 Since `sql` returns a *SqlFragment* you can chain uses:
 
