@@ -17,6 +17,8 @@
 
 /* eslint "id-length": off */
 
+'use strict';
+
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
 const { sql } = require('../index');
@@ -27,6 +29,7 @@ describe('example code', () => {
     // be sure to reflect changes there.
     it('stub', () => {
       // TODO
+      expect(sql !== null).to.equal(true);
     });
   });
 });
