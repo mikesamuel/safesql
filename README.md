@@ -31,6 +31,11 @@ appear.
 
 <!-- /TOC -->
 
+## Installation
+
+```bash
+$ npm install safesql
+```
 
 ## Usage By Example        <a name="usage"></a>
 
