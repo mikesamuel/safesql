@@ -18,6 +18,7 @@ appear.
 
 <!-- TOC -->
 
+*  [Installation](#installation)
 *  [Usage By Example](#usage)
    *  [`sql` returns a *SqlFragment*](#sql-returns-sqlfragment)
    *  [No excess quotes](#minimal-quotes)
@@ -31,7 +32,7 @@ appear.
 
 <!-- /TOC -->
 
-## Installation
+## Installation     <a name="installation"></a>
 
 ```bash
 $ npm install safesql
@@ -47,17 +48,17 @@ be sure to reflect changes there.
 -->
 
 ```js
-const { sql } = require('safesql')
-const { SqlId } = require('safesql/id')
+const { sql } = require('safesql');
+const { SqlId } = require('safesql/id');
 
-const ids   = [ SqlId.escape(x), SqlId.escape('y') ]
-const table = 'table'
-const id    = `foo'"bar`
+const ids   = [ SqlId.escape('x'), SqlId.escape('y') ];
+const table = 'table';
+const id    = `foo'"bar`;
 
-const query = sql`SELECT (${ids}) FROM \`${table}\` WHERE id=${id}`
+const query = sql`SELECT (${ids}) FROM \`${table}\` WHERE id=${id}`;
 
-console.log(query)
-// SELECT (`x`, `y`) FROM `table` WHERE id="foo'""bar"
+console.log(query);
+// SELECT (`x`, `y`) FROM `table` WHERE id='foo\'\"bar'
 ```
 
 `sql` functions as a template tag.
@@ -74,7 +75,7 @@ A `${...}` outside any quotes will be escaped and wrapped in appropriate quotes 
 ----
 
 ```js
-const { sql } = require('safesql')
+const { sql } = require('safesql');
 
 const column  = 'users';
 const userId  = 1;
@@ -99,11 +100,11 @@ re-escaped when used in `${data}`.
 Since `sql` returns a *SqlFragment* you can chain uses:
 
 ```js
-const { sql } = require('safesql')
+const { sql } = require('safesql');
 
-const data = { a: 1 }
-const whereClause = sql`WHERE ${data}`
-console.log(sql`SELECT * FROM TABLE ${whereClause}`)
+const data = { a: 1 };
+const whereClause = sql`WHERE ${data}`;
+console.log(sql`SELECT * FROM TABLE ${whereClause}`);
 // SELECT * FROM TABLE WHERE `a` = 1
 ```
 
