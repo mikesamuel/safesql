@@ -11,7 +11,7 @@
     "sec-roadmap",
     "es6"
   ],
-  "version": "1.0.0",
+  "version": "1.0.0-alpha",
   "main": "index.js",
   "files": [
     "fragment.js",
