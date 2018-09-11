@@ -19,7 +19,7 @@
 
 'use strict';
 
-require('module-keys/cjs').polyfill(module, require, 'safe-sql/test/safesql-test.js');
+require('module-keys/cjs').polyfill(module, require, 'safesql/test/safesql-test.js');
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
