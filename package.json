@@ -1,0 +1,99 @@
+{
+  "name": "safesql",
+  "description": "string template tags for safely composing shell strings",
+  "keywords": [
+    "sql",
+    "security",
+    "injection",
+    "template",
+    "template-tag",
+    "string-template",
+    "sec-roadmap",
+    "es6"
+  ],
+  "version": "1.0.0",
+  "main": "index.js",
+  "files": [
+    "fragment.js",
+    "id.js",
+    "index.js",
+    "lib/*.js"
+  ],
+  "scripts": {
+    "cover": "istanbul cover _mocha",
+    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
+    "lint": "./node_modules/.bin/eslint .",
+    "prepack": "npm run lint && npm test",
+    "test": "mocha"
+  },
+  "pre-commit": [
+    "prepack"
+  ],
+  "author": "@mikesamuel",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikesamuel/safesql.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mikesamuel/safesql/issues"
+  },
+  "dependencies": {
+    "template-tag-common": "^4.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "coveralls": "^3.0.1",
+    "eslint": "^4.19.1",
+    "eslint-config-strict": "^14.0.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^4.0.1",
+    "mocha-lcov-reporter": "^1.3.0",
+    "pre-commit": "^1.2.2"
+  },
+  "eslintConfig": {
+    "overrides": [
+      {
+        "files": [
+          "**/*.js"
+        ],
+        "env": {
+          "node": true
+        }
+      },
+      {
+        "files": [
+          "**/*.mjs"
+        ],
+        "parserOptions": {
+          "sourceType": "module"
+        }
+      }
+    ],
+    "extends": [
+      "strict"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 6,
+      "sourceType": "source",
+      "ecmaFeatures": {
+        "impliedStrict": false
+      }
+    },
+    "rules": {
+      "no-warning-comments": [
+        "error",
+        {
+          "terms": [
+            "do not submit"
+          ]
+        }
+      ],
+      "no-void": "off",
+      "strict": [
+        "error",
+        "global"
+      ]
+    }
+  }
+}
