@@ -16,3 +16,17 @@
  */
 
 'use strict';
+
+const { TypedString } = require('template-tag-common');
+
+class SqlFragment extends TypedString {}
+
+Object.defineProperty(
+  SqlFragment,
+  'contractKey',
+  {
+    value: 'safesql/fragment',
+    enumerable: true,
+  });
+
+module.exports.SqlFragment = SqlFragment;

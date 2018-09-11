@@ -16,3 +16,17 @@
  */
 
 'use strict';
+
+const { TypedString } = require('template-tag-common');
+
+class SqlId extends TypedString {}
+
+Object.defineProperty(
+  SqlId,
+  'contractKey',
+  {
+    value: 'safesql/id',
+    enumerable: true,
+  });
+
+module.exports.SqlId = SqlId;
