@@ -15,18 +15,46 @@
  * limitations under the License.
  */
 
+/* eslint no-inline-comments: 0 */
+
 'use strict';
+
+require('module-keys/cjs').polyfill(module, require, 'safesql/id.js');
 
 const { TypedString } = require('template-tag-common');
 
 class SqlId extends TypedString {}
 
-Object.defineProperty(
+// Define and export symbols before requiring escapers which require
+// SqlId.
+let mintId = null;
+let escapeId = null;
+
+function escape(str) {
+  const escaped = escapeId(str, /* forbidQualified */ true);
+  return mintId(escaped.substring(1, escaped.length - 1));
+}
+
+Object.defineProperties(
   SqlId,
-  'contractKey',
   {
-    value: 'safesql/id',
-    enumerable: true,
+    'contractKey': {
+      value: 'safesql/id',
+      enumerable: true,
+    },
+    'escape': {
+      value: escape,
+      enumerable: true,
+    },
   });
 
 module.exports.SqlId = SqlId;
+
+const escapers = require('./lib/escapers.js');
+const { Mintable } = require('node-sec-patterns');
+
+({ escapeId } = escapers);
+mintId = require.keys.unbox(
+  Mintable.minterFor(SqlId),
+  () => true,
+  (x) => x);
