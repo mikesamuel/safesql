@@ -17,7 +17,7 @@
 
 'use strict';
 
-require('module-keys/cjs').polyfill(module, require, 'safe-sql/index.js');
+require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
 
 const { escape, escapeId } = require('./lib/escapers.js');
 const { makeLexer } = require('./lib/lexer.js');
