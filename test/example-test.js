@@ -22,8 +22,8 @@
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
 
-const { sql } = require('../index');
-const { SqlId } = require('../id');
+const { sql } = require('../index.js');
+const { SqlId } = require('../id.js');
 
 describe('example code', () => {
   describe('README.md', () => {
