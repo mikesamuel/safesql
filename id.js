@@ -25,36 +25,12 @@ const { TypedString } = require('template-tag-common');
 
 class SqlId extends TypedString {}
 
-// Define and export symbols before requiring escapers which require
-// SqlId.
-let mintId = null;
-let escapeId = null;
-
-function escape(str) {
-  const escaped = escapeId(str, /* forbidQualified */ true);
-  return mintId(escaped.substring(1, escaped.length - 1));
-}
-
-Object.defineProperties(
+Object.defineProperty(
   SqlId,
+  'contractKey',
   {
-    'contractKey': {
-      value: 'safesql/id',
-      enumerable: true,
-    },
-    'escape': {
-      value: escape,
-      enumerable: true,
-    },
+    value: 'safesql/id',
+    enumerable: true,
   });
 
 module.exports.SqlId = SqlId;
-
-const escapers = require('./lib/escapers.js');
-const { Mintable } = require('node-sec-patterns');
-
-({ escapeId } = escapers);
-mintId = require.keys.unbox(
-  Mintable.minterFor(SqlId),
-  () => true,
-  (x) => x);

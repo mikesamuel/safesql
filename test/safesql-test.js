@@ -23,7 +23,7 @@ require('module-keys/cjs').polyfill(module, require, 'safesql/test/safesql-test.
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const { sql } = require('../index.js');
+const { mysql } = require('../index.js');
 const { SqlFragment } = require('../fragment.js');
 const { SqlId } = require('../id.js');
 
@@ -59,18 +59,18 @@ describe('template tag', () => {
   it('numbers', () => {
     runTagTest(
       'SELECT 2',
-      () => sql`SELECT ${ 1 + 1 }`);
+      () => mysql`SELECT ${ 1 + 1 }`);
   });
   it('date', () => {
     const date = new Date(Date.UTC(2000, 0, 1, 0, 0, 0));
     runTagTest(
       'SELECT \'2000-01-01 00:00:00.000\'',
-      () => sql({ timeZone: 'GMT' })`SELECT ${ date }`);
+      () => mysql({ timeZone: 'GMT' })`SELECT ${ date }`);
   });
   it('string', () => {
     runTagTest(
       'SELECT \'Hello, World!\\n\'',
-      () => sql`SELECT ${ 'Hello, World!\n' }`);
+      () => mysql`SELECT ${ 'Hello, World!\n' }`);
   });
   it('stringify', () => {
     const obj = {
@@ -81,59 +81,59 @@ describe('template tag', () => {
     };
     runTagTest(
       'SELECT \'Hello, World!\'',
-      () => sql({ stringifyObjects: true })`SELECT ${ obj }`);
+      () => mysql({ stringifyObjects: true })`SELECT ${ obj }`);
     runTagTest(
       'SELECT * FROM t WHERE `Hello` = \'World!\'',
-      () => sql({ stringifyObjects: false })`SELECT * FROM t WHERE ${ obj }`);
+      () => mysql({ stringifyObjects: false })`SELECT * FROM t WHERE ${ obj }`);
   });
   it('identifier', () => {
     runTagTest(
       'SELECT `foo`',
-      () => sql`SELECT ${ mintSqlId('foo') }`);
+      () => mysql`SELECT ${ mintSqlId('foo') }`);
   });
   it('blob', () => {
     runTagTest(
       'SELECT "\x1f8p\xbe\\\'OlI\xb3\xe3\\Z\x0cg(\x95\x7f"',
       () =>
-        sql`SELECT "${ Buffer.from('1f3870be274f6c49b3e31a0c6728957f', 'hex') }"`
+        mysql`SELECT "${ Buffer.from('1f3870be274f6c49b3e31a0c6728957f', 'hex') }"`
     );
   });
   it('null', () => {
     runTagTest(
       'SELECT NULL',
       () =>
-        sql`SELECT ${ null }`
+        mysql`SELECT ${ null }`
     );
   });
   it('undefined', () => {
     runTagTest(
       'SELECT NULL',
       () =>
-        sql`SELECT ${ undefined }` // eslint-disable-line no-undefined
+        mysql`SELECT ${ undefined }` // eslint-disable-line no-undefined
     );
   });
   it('negative zero', () => {
     runTagTest(
       'SELECT (1 / 0)',
       () =>
-        sql`SELECT (1 / ${ -0 })`
+        mysql`SELECT (1 / ${ -0 })`
     );
   });
   it('raw', () => {
     const raw = mintSqlFragment('1 + 1');
     runTagTest(
       'SELECT 1 + 1',
-      () => sql`SELECT ${ raw }`);
+      () => mysql`SELECT ${ raw }`);
   });
   it('string in dq string', () => {
     runTagTest(
       'SELECT "Hello, World!\\n"',
-      () => sql`SELECT "Hello, ${ 'World!' }\n"`);
+      () => mysql`SELECT "Hello, ${ 'World!' }\n"`);
   });
   it('string in sq string', () => {
     runTagTest(
       'SELECT \'Hello, World!\\n\'',
-      () => sql`SELECT 'Hello, ${ 'World!' }\n'`);
+      () => mysql`SELECT 'Hello, ${ 'World!' }\n'`);
   });
   it('string after string in string', () => {
     // The following tests check obliquely that '?' is not
@@ -141,55 +141,55 @@ describe('template tag', () => {
     // internally.
     runTagTest(
       'SELECT \'Hello\', "World?"',
-      () => sql`SELECT '${ 'Hello' }', "World?"`);
+      () => mysql`SELECT '${ 'Hello' }', "World?"`);
   });
   it('string before string in string', () => {
     runTagTest(
       'SELECT \'Hello?\', \'World?\'',
-      () => sql`SELECT 'Hello?', '${ 'World?' }'`);
+      () => mysql`SELECT 'Hello?', '${ 'World?' }'`);
   });
   it('number after string in string', () => {
     runTagTest(
       'SELECT \'Hello?\', 123',
-      () => sql`SELECT '${ 'Hello?' }', ${ 123 }`);
+      () => mysql`SELECT '${ 'Hello?' }', ${ 123 }`);
   });
   it('number before string in string', () => {
     runTagTest(
       'SELECT 123, \'World?\'',
-      () => sql`SELECT ${ 123 }, '${ 'World?' }'`);
+      () => mysql`SELECT ${ 123 }, '${ 'World?' }'`);
   });
   it('string in identifier', () => {
     runTagTest(
       'SELECT `foo`',
-      () => sql`SELECT \`${ 'foo' }\``);
+      () => mysql`SELECT \`${ 'foo' }\``);
   });
   it('identifier in identifier', () => {
     runTagTest(
       'SELECT `foo`',
-      () => sql`SELECT \`${ mintSqlId('foo') }\``);
+      () => mysql`SELECT \`${ mintSqlId('foo') }\``);
   });
   it('plain quoted identifier', () => {
     runTagTest(
       'SELECT `ID`',
-      () => sql`SELECT \`ID\``);
+      () => mysql`SELECT \`ID\``);
   });
   it('backquotes in identifier', () => {
     runTagTest(
       'SELECT `\\\\`',
-      () => sql`SELECT \`\\\``);
+      () => mysql`SELECT \`\\\``);
     const strings = [ 'SELECT `\\\\`' ];
     strings.raw = strings.slice();
-    runTagTest('SELECT `\\\\`', () => sql(strings));
+    runTagTest('SELECT `\\\\`', () => mysql(strings));
   });
   it('backquotes in strings', () => {
     runTagTest(
       'SELECT "`\\\\", \'`\\\\\'',
-      () => sql`SELECT "\`\\", '\`\\'`);
+      () => mysql`SELECT "\`\\", '\`\\'`);
   });
   it('number in identifier', () => {
     runTagTest(
       'SELECT `foo_123`',
-      () => sql`SELECT \`foo_${ 123 }\``);
+      () => mysql`SELECT \`foo_${ 123 }\``);
   });
   it('array', () => {
     const id = mintSqlId('foo');
@@ -197,52 +197,52 @@ describe('template tag', () => {
     const values = [ 123, 'foo', id, frag ];
     runTagTest(
       'SELECT X FROM T WHERE X IN (123, \'foo\', `foo`, 1 + 1)',
-      () => sql`SELECT X FROM T WHERE X IN (${ values })`);
+      () => mysql`SELECT X FROM T WHERE X IN (${ values })`);
   });
   it('unclosed-sq', () => {
-    expect(() => sql`SELECT '${ 'foo' }`).to.throw();
+    expect(() => mysql`SELECT '${ 'foo' }`).to.throw();
   });
   it('unclosed-dq', () => {
-    expect(() => sql`SELECT "foo`).to.throw();
+    expect(() => mysql`SELECT "foo`).to.throw();
   });
   it('unclosed-bq', () => {
-    expect(() => sql`SELECT \`${ 'foo' }`).to.throw();
+    expect(() => mysql`SELECT \`${ 'foo' }`).to.throw();
   });
   it('unclosed-comment', () => {
     // Ending in a comment is a concatenation hazard.
     // See comments in lib/es6/Lexer.js.
-    expect(() => sql`SELECT (${ 0 }) -- comment`).to.throw();
+    expect(() => mysql`SELECT (${ 0 }) -- comment`).to.throw();
   });
   it('merge-word-string', () => {
     runTagTest(
       'SELECT utf8\'foo\'',
-      () => sql`SELECT utf8${ 'foo' }`);
+      () => mysql`SELECT utf8${ 'foo' }`);
   });
   it('merge-string-string', () => {
     runTagTest(
       // Adjacent string tokens are concatenated, but 'a''b' is a
       // 3-char string with a single-quote in the middle.
       'SELECT \'a\' \'b\'',
-      () => sql`SELECT ${ 'a' }${ 'b' }`);
+      () => mysql`SELECT ${ 'a' }${ 'b' }`);
   });
   it('merge-bq-bq', () => {
     runTagTest(
       'SELECT `a` `b`',
-      () => sql`SELECT ${ mintSqlId('a') }${ mintSqlId('b') }`);
+      () => mysql`SELECT ${ mintSqlId('a') }${ mintSqlId('b') }`);
   });
   it('merge-static-string-string', () => {
     runTagTest(
       'SELECT \'a\' \'b\'',
-      () => sql`SELECT 'a'${ 'b' }`);
+      () => mysql`SELECT 'a'${ 'b' }`);
   });
   it('merge-string-static-string', () => {
     runTagTest(
       'SELECT \'a\' \'b\'',
-      () => sql`SELECT ${ 'a' }'b'`);
+      () => mysql`SELECT ${ 'a' }'b'`);
   });
   it('not-a-merge-hazard', () => {
     runTagTest(
       'SELECT \'a\'\'b\'',
-      () => sql`SELECT 'a''b'`);
+      () => mysql`SELECT 'a''b'`);
   });
 });

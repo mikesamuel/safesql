@@ -19,9 +19,10 @@
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const { makeLexer } = require('../lib/lexer');
+const mysqlLexer = require('../lib/mysql-lexer');
 
 function tokens(...chunks) {
+  const { makeLexer } = mysqlLexer;
   const lexer = makeLexer();
   const out = [];
   for (let i = 0, len = chunks.length; i < len; ++i) {
@@ -77,7 +78,7 @@ describe('template lexer', () => {
     expect(tokens('SELECT `\\`', '`')).to.equal('`,_');
   });
   it('replay error', () => {
-    const lexer = makeLexer();
+    const lexer = mysqlLexer.makeLexer();
     expect(lexer('SELECT ')).to.equal(null);
     expect(() => lexer(' # ')).to.throw(
       Error, null, 'Expected delimiter at " # "');
@@ -86,7 +87,7 @@ describe('template lexer', () => {
       Error, null, 'Expected delimiter at " # "');
   });
   it('unfinished escape squence', () => {
-    const lexer = makeLexer();
+    const lexer = mysqlLexer.makeLexer();
     expect(() => lexer('SELECT "\\')).to.throw(
       Error, null, 'Expected "\\\\" at "\\\\"');
   });

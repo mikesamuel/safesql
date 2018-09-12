@@ -19,13 +19,15 @@
 
 require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
 
-const { escape, escapeId } = require('./lib/escapers.js');
-const { makeLexer } = require('./lib/lexer.js');
+const {
+  escape: mysqlEscape,
+  escapeId: mysqlEscapeId,
+} = require('./lib/escapers.js');
+const mysqlLexer = require('./lib/mysql-lexer.js');
 const { SqlFragment } = require('./fragment.js');
 
 const { Mintable } = require('node-sec-patterns');
 const {
-  calledAsTemplateTagQuick,
   memoizedTagFunction,
   trimCommonWhitespaceFromLines,
 } = require('template-tag-common');
@@ -35,7 +37,7 @@ const LITERAL_BACKTICK_FIXUP_PATTERN = /((?:[^\\]|\\[^`])+)|\\(`)(?!`)/g;
 const mintSqlFragment = require.keys.unbox(
   Mintable.minterFor(SqlFragment),
   () => true,
-  (x) => `${ x }`);
+  String);
 
 /**
  * Trims common whitespace and converts escaped backticks
@@ -54,97 +56,103 @@ function prepareStrings(strings) {
 }
 
 /**
- * Analyzes the static parts of the tag content.
- *
- * @param {!Array.<string>} strings a valid TemplateObject.
- * @return { !{
- *       delimiters : !Array.<string>,
- *       chunks: !Array.<string>
- *     } }
- *     A record like { delimiters, chunks }
- *     where delimiter is a contextual cue and chunk is
- *     the adjusted raw text.
+ * Returns a template tag function that contextually autoescapes values
+ * producing a SqlFragment.
  */
-function computeStatic(strings) {
-  const chunks = prepareStrings(strings);
-  const lexer = makeLexer();
+function makeSqlTagFunction(
+  { makeLexer },
+  escape,
+  escapeDelimitedValue) {
+  /**
+   * Analyzes the static parts of the tag content.
+   *
+   * @param {!Array.<string>} strings a valid TemplateObject.
+   * @return { !{
+   *       delimiters : !Array.<string>,
+   *       chunks: !Array.<string>
+   *     } }
+   *     A record like { delimiters, chunks }
+   *     where delimiter is a contextual cue and chunk is
+   *     the adjusted raw text.
+   */
+  function computeStatic(strings) {
+    const chunks = prepareStrings(strings);
+    const lexer = makeLexer();
 
-  const delimiters = [];
-  let delimiter = null;
-  for (let i = 0, len = chunks.length; i < len; ++i) {
-    const chunk = String(chunks[i]);
-    const newDelimiter = lexer(chunk);
-    delimiters.push(newDelimiter);
-    delimiter = newDelimiter;
+    const delimiters = [];
+    let delimiter = null;
+    for (let i = 0, len = chunks.length; i < len; ++i) {
+      const chunk = String(chunks[i]);
+      const newDelimiter = lexer(chunk);
+      delimiters.push(newDelimiter);
+      delimiter = newDelimiter;
+    }
+
+    if (delimiter) {
+      throw new Error(`Unclosed quoted string: ${ delimiter }`);
+    }
+
+    return { delimiters, chunks };
   }
 
-  if (delimiter) {
-    throw new Error(`Unclosed quoted string: ${ delimiter }`);
+  function defangMergeHazard(before, escaped, after) {
+    const escapedLast = escaped[escaped.length - 1];
+    if ('"\'`'.indexOf(escapedLast) < 0) {
+      // Not a merge hazard.
+      return escaped;
+    }
+
+    let escapedSetOff = escaped;
+    const lastBefore = before[before.length - 1];
+    if (escapedLast === escaped[0] && escapedLast === lastBefore) {
+      escapedSetOff = ` ${ escapedSetOff }`;
+    }
+    if (escapedLast === after[0]) {
+      escapedSetOff += ' ';
+    }
+    return escapedSetOff;
   }
 
-  return { delimiters, chunks };
+  function interpolateSqlIntoFragment(
+    { stringifyObjects, timeZone, forbidQualified },
+    { delimiters, chunks },
+    strings, values) {
+    // A buffer to accumulate output.
+    let [ result ] = chunks;
+    for (let i = 1, len = chunks.length; i < len; ++i) {
+      const chunk = chunks[i];
+      // The count of values must be 1 less than the surrounding
+      // chunks of literal text.
+      const delimiter = delimiters[i - 1];
+      const value = values[i - 1];
+
+      const escaped = delimiter ?
+        escapeDelimitedValue(value, delimiter, timeZone, forbidQualified) :
+        defangMergeHazard(
+          result,
+          escape(value, stringifyObjects, timeZone),
+          chunk);
+
+      result += escaped + chunk;
+    }
+
+    return mintSqlFragment(result);
+  }
+
+  return memoizedTagFunction(computeStatic, interpolateSqlIntoFragment);
 }
 
-function escapeDelimitedValue(value, delimiter, timeZone, forbidQualified) {
+function mysqlEscapeDelimitedValue(
+  value, delimiter, timeZone, forbidQualified) {
   if (delimiter === '`') {
-    return escapeId(value, forbidQualified).replace(/^`|`$/g, '');
+    return mysqlEscapeId(value, forbidQualified).replace(/^`|`$/g, '');
   }
   if (Buffer.isBuffer(value)) {
     value = value.toString('binary');
   }
-  const escaped = escape(String(value), true, timeZone);
+  const escaped = mysqlEscape(String(value), true, timeZone);
   return escaped.substring(1, escaped.length - 1);
 }
 
-function defangMergeHazard(before, escaped, after) {
-  const escapedLast = escaped[escaped.length - 1];
-  if ('"\'`'.indexOf(escapedLast) < 0) {
-    // Not a merge hazard.
-    return escaped;
-  }
-
-  let escapedSetOff = escaped;
-  const lastBefore = before[before.length - 1];
-  if (escapedLast === escaped[0] && escapedLast === lastBefore) {
-    escapedSetOff = ` ${ escapedSetOff }`;
-  }
-  if (escapedLast === after[0]) {
-    escapedSetOff += ' ';
-  }
-  return escapedSetOff;
-}
-
-function interpolateSqlIntoFragment(
-  { stringifyObjects, timeZone, forbidQualified },
-  { delimiters, chunks },
-  strings, values) {
-  // A buffer to accumulate output.
-  let [ result ] = chunks;
-  for (let i = 1, len = chunks.length; i < len; ++i) {
-    const chunk = chunks[i];
-    // The count of values must be 1 less than the surrounding
-    // chunks of literal text.
-    const delimiter = delimiters[i - 1];
-    const value = values[i - 1];
-
-    const escaped = delimiter ?
-      escapeDelimitedValue(value, delimiter, timeZone, forbidQualified) :
-      defangMergeHazard(
-        result,
-        escape(value, stringifyObjects, timeZone),
-        chunk);
-
-    result += escaped + chunk;
-  }
-
-  return mintSqlFragment(result);
-}
-
-/**
- * Template tag function that contextually autoescapes values
- * producing a SqlFragment.
- */
-const sql = memoizedTagFunction(computeStatic, interpolateSqlIntoFragment);
-sql.calledAsTemplateTagQuick = calledAsTemplateTagQuick;
-
-module.exports = { sql };
+module.exports.mysql = makeSqlTagFunction(
+  mysqlLexer, mysqlEscape, mysqlEscapeDelimitedValue);

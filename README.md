@@ -51,24 +51,21 @@ be sure to reflect changes there.
 const { sql } = require('safesql');
 const { SqlId } = require('safesql/id');
 
-const ids   = [ SqlId.escape('x'), SqlId.escape('y') ];
 const table = 'table';
-const id    = `foo'"bar`;
+const ids   = [ 'x', 'y', 'z' ];
+const str   = 'foo\'\"bar';
 
-const query = sql`SELECT (${ids}) FROM \`${table}\` WHERE id=${id}`;
+const query = mysql`SELECT * FROM \`${ table }\` WHERE id IN (${ ids }) AND s=${ str }`;
 
 console.log(query);
-// SELECT (`x`, `y`) FROM `table` WHERE id='foo\'\"bar'
+// SELECT * FROM `table` WHERE id IN ('x', 'y', 'z') AND s='foo''"bar'
 ```
 
-`sql` functions as a template tag.
-
-`SqlId.escape` converts a string to a SQL identifier, which is handy if you need
-to pass around a column name.
+`mysql` functions as a template tag.
 
 Commas separate elements of arrays in the output.
 
-`sql` treats a `${...}` between backticks (<tt>\\\`</tt>) as a SQL identifier.
+`mysql` treats a `${...}` between backticks (<tt>\\\`</tt>) as a SQL identifier.
 
 A `${...}` outside any quotes will be escaped and wrapped in appropriate quotes if necessary.
 
@@ -81,9 +78,9 @@ const column  = 'users';
 const userId  = 1;
 const data    = {
   email:    'foobar@example.com',
-  modified: sql`NOW()`
+  modified: mysql`NOW()`
 };
-const query = sql`UPDATE \`${column}\` SET ${data} WHERE \`id\` = ${userId}`;
+const query = mysql`UPDATE \`${column}\` SET ${data} WHERE \`id\` = ${userId}`;
 
 console.log(query);
 // UPDATE `users` SET `email` = 'foobar@example.com', `modified` = NOW() WHERE `id` = 1
@@ -95,16 +92,16 @@ The output of <tt>sql\`...\`</tt> has type *SqlFragment* (from
 `require('safesql/fragment')`) so the `NOW()` function call is not
 re-escaped when used in `${data}`.
 
-### `sql` returns a *SqlFragment*        <a name="sql-returns-sqlfragment"></a>
+### `mysql` returns a *SqlFragment*        <a name="sql-returns-sqlfragment"></a>
 
-Since `sql` returns a *SqlFragment* you can chain uses:
+Since `mysql` returns a *SqlFragment* you can chain uses:
 
 ```js
 const { sql } = require('safesql');
 
 const data = { a: 1 };
-const whereClause = sql`WHERE ${data}`;
-console.log(sql`SELECT * FROM TABLE ${whereClause}`);
+const whereClause = mysql`WHERE ${data}`;
+console.log(mysql`SELECT * FROM TABLE ${whereClause}`);
 // SELECT * FROM TABLE WHERE `a` = 1
 ```
 
@@ -115,9 +112,9 @@ An interpolation in a quoted string will not insert excess quotes:
 ```js
 const { sql } = require('safesql')
 
-console.log(sql`SELECT '${ 'foo' }' `)
+console.log(mysql`SELECT '${ 'foo' }' `)
 // SELECT 'foo'
-console.log(sql`SELECT ${ 'foo' } `)
+console.log(mysql`SELECT ${ 'foo' } `)
 // SELECT 'foo'
 ```
 
@@ -128,7 +125,7 @@ Backticks end a template tag, so you need to escape backticks.
 ```js
 const { sql } = require('safesql')
 
-console.log(sql`SELECT \`${ 'id' }\` FROM \`TABLE\``)
+console.log(mysql`SELECT \`${ 'id' }\` FROM \`TABLE\``)
 // SELECT `id` FROM `TABLE`
 ```
 
@@ -139,7 +136,7 @@ Other escape sequences are raw.
 ```js
 const { sql } = require('safesql')
 
-console.log(sql`SELECT "\n"`)
+console.log(mysql`SELECT "\n"`)
 // SELECT "\n"
 ```
 
@@ -153,10 +150,11 @@ const { SqlFragment } = require('safesql/fragment')
 const { SqlId } = require('safesql/id')
 ```
 
-### sql(options)        <a name="sql-options"></a>
+### mysql(options)        <a name="mysql-options"></a>
+### pgsql(options)        <a name="pg-options"></a>
 
-When called with an options bundle instead of as a template tag, `sql`
-returns a template tag that uses those options.
+When called with an options bundle instead of as a template tag,
+`mysql` and `pg` return a template tag that uses those options.
 
 The options object can contain any of
 `{ stringifyObjects, timeZone, forbidQualified }` which have the
@@ -166,19 +164,29 @@ same meaning as when used with *[sqlstring][]*.
 const timeZone = 'GMT'
 const date = new Date(Date.UTC(2000, 0, 1))
 
-console.log(sql({ timeZone })`SELECT ${date}`)
+console.log(mysql({ timeZone })`SELECT ${date}`)
 // SELECT '2000-01-01 00:00:00.000'
 ```
 
-### sql\`...\`         <a name="sql-as-tag"></a>
+### mysql\`...\`         <a name="mysql-as-tag"></a>
 
 When used as a template tag, chooses an appropriate escaping
 convention for each `${...}` based on the context in which it appears.
 
-`SqlString.sql` handles `${...}` inside quoted strings as if the tag
+`mysql` handles `${...}` inside quoted strings as if the template
 matched the following grammar:
 
-[![Railroad Diagram](docs/sql-railroad.svg)](docs/sql-railroad.svg)
+[![Railroad Diagram](docs/mysql-railroad.svg)](docs/mysql-railroad.svg)
+
+### pg\`...\`         <a name="pg-as-tag"></a>
+
+When used as a template tag, chooses an appropriate escaping
+convention for each `${...}` based on the context in which it appears.
+
+`pg` handles `${...}` inside quoted strings as if the template
+matched the following grammar:
+
+[![Railroad Diagram](docs/mysql-railroad.svg)](docs/ph-railroad.svg)
 
 ### SqlFragment       <a name="class-SqlFragment"></a>
 

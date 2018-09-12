@@ -25,7 +25,7 @@ const { expect } = require('chai');
 const { describe, it } = require('mocha');
 const { Mintable } = require('node-sec-patterns');
 
-const { sql } = require('../index.js');
+const { mysql } = require('../index.js');
 const { SqlId } = require('../id.js');
 const { escape, escapeId } = require('../lib/escapers.js');
 
@@ -105,7 +105,7 @@ describe('escape', () => {
   });
 
   it('raw not escaped', () => {
-    expect(escape(sql`NOW()`)).to.equal('NOW()');
+    expect(escape(mysql`NOW()`)).to.equal('NOW()');
   });
 
   it('objects are turned into key value pairs', () => {
@@ -130,7 +130,7 @@ describe('escape', () => {
   });
 
   it('fragment is not quoted', () => {
-    expect(escape(sql`CURRENT_TIMESTAMP()`)).to.equal('CURRENT_TIMESTAMP()');
+    expect(escape(mysql`CURRENT_TIMESTAMP()`)).to.equal('CURRENT_TIMESTAMP()');
   });
 
   it('nested objects are cast to strings', () => {
@@ -248,6 +248,10 @@ describe('escape', () => {
   it('double quotes get escaped', () => {
     expect(escape('Sup"er')).to.equal('\'Sup\\"er\'');
     expect(escape('Super"')).to.equal('\'Super\\"\'');
+  });
+
+  it('dollar signs get escaped', () => {
+    expect(escape('foo$$; DELETE')).to.equal(String.raw`'foo\$\$; DELETE'`);
   });
 
   it('dates are converted to YYYY-MM-DD HH:II:SS.sss', () => {
