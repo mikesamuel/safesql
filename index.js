@@ -20,8 +20,10 @@
 require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
 
 const {
-  escape: mysqlEscape,
-  escapeId: mysqlEscapeId,
+  mysql: {
+    escape: mysqlEscape,
+    escapeId: mysqlEscapeId,
+  },
 } = require('./lib/escapers.js');
 const mysqlLexer = require('./lib/mysql-lexer.js');
 const { SqlFragment } = require('./fragment.js');
