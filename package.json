@@ -51,25 +51,10 @@
     "mocha-lcov-reporter": "^1.3.0",
     "pre-commit": "^1.2.2"
   },
+  "eslintIgnore": [
+    "/coverage/**"
+  ],
   "eslintConfig": {
-    "overrides": [
-      {
-        "files": [
-          "**/*.js"
-        ],
-        "env": {
-          "node": true
-        }
-      },
-      {
-        "files": [
-          "**/*.mjs"
-        ],
-        "parserOptions": {
-          "sourceType": "module"
-        }
-      }
-    ],
     "extends": [
       "strict"
     ],
