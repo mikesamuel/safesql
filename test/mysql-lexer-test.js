@@ -19,7 +19,7 @@
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const mysqlLexer = require('../lib/mysql-lexer');
+const mysqlLexer = require('../lib/mysql-lexer.js');
 
 function tokens(...chunks) {
   const { makeLexer } = mysqlLexer;
@@ -31,7 +31,7 @@ function tokens(...chunks) {
   return out.join(',');
 }
 
-describe('template lexer', () => {
+describe('mysql template lexer', () => {
   it('empty string', () => {
     expect(tokens('')).to.equal('_');
   });
