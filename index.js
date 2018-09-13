@@ -144,8 +144,7 @@ function makeSqlTagFunction(
   return memoizedTagFunction(computeStatic, interpolateSqlIntoFragment);
 }
 
-function mysqlEscapeDelimitedValue(
-  value, delimiter, timeZone, forbidQualified) {
+function mysqlEscapeDelimitedValue(value, delimiter, timeZone, forbidQualified) {
   if (delimiter === '`') {
     return mysqlEscapeId(value, forbidQualified).replace(/^`|`$/g, '');
   }

@@ -213,7 +213,7 @@ function testEscapes(target, { escape, escapeId }) {
         return 'f\'oo';
       } } })).to.equal({
         mysql: '`a` = \'f\\\'oo\'',
-        pg: '"a" = \'f\\\'oo\'',
+        pg: '"a" = e\'f\\\'oo\'',
       }[target]);
     });
 
@@ -274,52 +274,123 @@ function testEscapes(target, { escape, escapeId }) {
     });
 
     it('\\0 gets escaped', () => {
-      expect(escape('Sup\0er')).to.equal('\'Sup\\0er\'');
-      expect(escape('Super\0')).to.equal('\'Super\\0\'');
+      expect(escape('Sup\u0000er')).to.equal({
+        mysql: '\'Sup\\0er\'',
+        pg: 'e\'Sup\\x00er\'',
+      }[target]);
+
+      expect(escape('Super\u0000')).to.equal({
+        mysql: '\'Super\\0\'',
+        pg: 'e\'Super\\x00\'',
+      }[target]);
+
+      expect(escape('Super\u000012')).to.equal({
+        mysql: '\'Super\\012\'',
+        pg: 'e\'Super\\x0012\'',
+      }[target]);
     });
 
     it('\\b gets escaped', () => {
-      expect(escape('Sup\ber')).to.equal('\'Sup\\ber\'');
-      expect(escape('Super\b')).to.equal('\'Super\\b\'');
+      expect(escape('Sup\ber')).to.equal({
+        mysql: '\'Sup\\ber\'',
+        pg: 'e\'Sup\\ber\'',
+      }[target]);
+
+      expect(escape('Super\b')).to.equal({
+        mysql: '\'Super\\b\'',
+        pg: 'e\'Super\\b\'',
+      }[target]);
     });
 
     it('\\n gets escaped', () => {
-      expect(escape('Sup\ner')).to.equal('\'Sup\\ner\'');
-      expect(escape('Super\n')).to.equal('\'Super\\n\'');
+      expect(escape('Sup\ner')).to.equal({
+        mysql: '\'Sup\\ner\'',
+        pg: 'e\'Sup\\ner\'',
+      }[target]);
+
+      expect(escape('Super\n')).to.equal({
+        mysql: '\'Super\\n\'',
+        pg: 'e\'Super\\n\'',
+      }[target]);
     });
 
     it('\\r gets escaped', () => {
-      expect(escape('Sup\rer')).to.equal('\'Sup\\rer\'');
-      expect(escape('Super\r')).to.equal('\'Super\\r\'');
+      expect(escape('Sup\rer')).to.equal({
+        mysql: '\'Sup\\rer\'',
+        pg: 'e\'Sup\\rer\'',
+      }[target]);
+
+      expect(escape('Super\r')).to.equal({
+        mysql: '\'Super\\r\'',
+        pg: 'e\'Super\\r\'',
+      }[target]);
     });
 
     it('\\t gets escaped', () => {
-      expect(escape('Sup\ter')).to.equal('\'Sup\\ter\'');
-      expect(escape('Super\t')).to.equal('\'Super\\t\'');
+      expect(escape('Sup\ter')).to.equal({
+        mysql: '\'Sup\\ter\'',
+        pg: 'e\'Sup\\ter\'',
+      }[target]);
+
+      expect(escape('Super\t')).to.equal({
+        mysql: '\'Super\\t\'',
+        pg: 'e\'Super\\t\'',
+      }[target]);
     });
 
     it('\\ gets escaped', () => {
-      expect(escape('Sup\\er')).to.equal('\'Sup\\\\er\'');
-      expect(escape('Super\\')).to.equal('\'Super\\\\\'');
+      expect(escape('Sup\\er')).to.equal({
+        mysql: '\'Sup\\\\er\'',
+        pg: 'e\'Sup\\\\er\'',
+      }[target]);
+
+      expect(escape('Super\\')).to.equal({
+        mysql: '\'Super\\\\\'',
+        pg: 'e\'Super\\\\\'',
+      }[target]);
     });
 
-    it('\\u001a (ascii 26) gets replaced with \\Z', () => {
-      expect(escape('Sup\u001aer')).to.equal('\'Sup\\Zer\'');
-      expect(escape('Super\u001a')).to.equal('\'Super\\Z\'');
+    it('\\u001a (ascii 26 - Windows EOF) gets replaced', () => {
+      expect(escape('Sup\u001aer')).to.equal({
+        mysql: '\'Sup\\Zer\'',
+        pg: 'e\'Sup\\x1aer\'',
+      }[target]);
+
+      expect(escape('Super\u001a')).to.equal({
+        mysql: '\'Super\\Z\'',
+        pg: 'e\'Super\\x1a\'',
+      }[target]);
     });
 
     it('single quotes get escaped', () => {
-      expect(escape('Sup\'er')).to.equal('\'Sup\\\'er\'');
-      expect(escape('Super\'')).to.equal('\'Super\\\'\'');
+      expect(escape('Sup\'er')).to.equal({
+        mysql: '\'Sup\\\'er\'',
+        pg: 'e\'Sup\\\'er\'',
+      }[target]);
+
+      expect(escape('Super\'')).to.equal({
+        mysql: '\'Super\\\'\'',
+        pg: 'e\'Super\\\'\'',
+      }[target]);
     });
 
     it('double quotes get escaped', () => {
-      expect(escape('Sup"er')).to.equal('\'Sup\\"er\'');
-      expect(escape('Super"')).to.equal('\'Super\\"\'');
+      expect(escape('Sup"er')).to.equal({
+        mysql: '\'Sup\\"er\'',
+        pg: 'e\'Sup\\"er\'',
+      }[target]);
+
+      expect(escape('Super"')).to.equal({
+        mysql: '\'Super\\"\'',
+        pg: 'e\'Super\\"\'',
+      }[target]);
     });
 
     it('dollar signs get escaped', () => {
-      expect(escape('foo$$; DELETE')).to.equal(String.raw`'foo\$\$; DELETE'`);
+      expect(escape('foo$$; DELETE')).to.equal({
+        mysql: String.raw`'foo\$\$; DELETE'`,
+        pg: String.raw`e'foo\$\$; DELETE'`,
+      }[target]);
     });
 
     it('dates are converted to YYYY-MM-DD HH:II:SS.sss', () => {
@@ -389,7 +460,7 @@ function testEscapes(target, { escape, escapeId }) {
       buffer.toString = () => '00\' OR \'1\'=\'1';
       const string = escape(buffer);
 
-      expect(string).to.equal('X\'00\\\' OR \\\'1\\\'=\\\'1\'');
+      expect(string).to.equal('X\'0001feff\'');
     });
 
     it('NaN -> NaN', () => {
