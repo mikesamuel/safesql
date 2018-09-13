@@ -94,16 +94,27 @@ describe('pg template lexer', () => {
     expect(tokens('SELECT \'\\\'', '\'')).to.equal('_,\'');
   });
   it('Esq', () => {
-    expect(tokens('SELECT E\'foo\'')).to.equal('_');
+    expect(tokens('SELECT E\'foo\'')).to.equal('e');
+    expect(tokens('SELECT E\'foo\';')).to.equal('_');
     expect(tokens('SELECT E\'foo')).to.equal('E\'');
-    expect(tokens('SELECT `foo`, E\'foo\'')).to.equal('_');
-    expect(tokens('SELECT E\'', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT E\'x', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT E\'"', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT E\'`', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT E\'\'\'', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT E\'\\\'', '\'')).to.equal('E\',_');
-    expect(tokens('SELECT e\'\\\'', '\'')).to.equal('e\',_');
+    expect(tokens('SELECT `foo`, E\'foo\';')).to.equal('_');
+    expect(tokens('SELECT E\'', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'x', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'"', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'`', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'\'\'', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'\\\'', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT e\'\\\'', '\';')).to.equal('e\',_');
+    // e' applies to subsequent single quoted strings.
+    // 4.1.2.2. String Constants with C-style Escapes
+    // (When continuing an escape string constant across lines,
+    //  write E only before the first opening quote.)
+    expect(tokens('SELECT e\'foo\'\n  \'\\\'')).to.equal('e\'');
+    expect(tokens('SELECT e\'foo\' -- \n  \'\\\'')).to.equal('e\'');
+    expect(tokens('SELECT E\'foo\' /* */ \n  \'\\\'')).to.equal('e\'');
+    expect(tokens('SELECT e\'foo\' /* /**/\n*/  \'\\\'')).to.equal('e\'');
+    // Check that we can look through interpolations for e'' continuations.
+    expect(tokens('SELECT e\'foo', 'bar\' /* */ \n  ', '\n  ', ';')).to.equal('e\',e,e,_');
   });
   it('U&sq', () => {
     expect(tokens('SELECT U&\'foo\'')).to.equal('_');
@@ -140,10 +151,6 @@ describe('pg template lexer', () => {
       .to.throw(Error, 'merge hazard \'$\' at end of $foo$ delimited string');
     expect(tokens('SELECT $foo$ $foo$')).to.equal('_');
     expect(tokens('SELECT $foo$ $x')).to.equal('$foo$');
-  });
-  it('wot!', () => {
-    expect(() => tokens('SELECT $foo$ $x$'))
-      .to.throw(Error, 'merge hazard \'$\' at end of $foo$ delimited string');
   });
   it('replay error', () => {
     const lexer = pgLexer.makeLexer();
