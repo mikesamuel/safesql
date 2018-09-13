@@ -126,7 +126,12 @@ function testEscapes(target, { escape, escapeId }) {
 
     it('rejects qualified id', () => {
       const qualifiedId = mintId(escapeId('id1.id2', false));
-      expect(() => escapeId(qualifiedId, true)).throws();
+      expect(() => escapeId(qualifiedId, true)).to.throw();
+    });
+
+    it('allow qualified id', () => {
+      const qualifiedId = mintId(escapeId('id1.id2', false));
+      expect(() => escapeId(qualifiedId, false)).to.not.throw();
     });
   });
 
