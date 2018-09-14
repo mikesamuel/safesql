@@ -122,7 +122,7 @@ describe('pg template tag', () => {
     });
     it('e', () => {
       runTagTest(
-        'SELECT e\'\x1f8p\xbe\\\'OlI\xb3\xe3\\x1a\x0cg(\x95\x7f\'',
+        'SELECT e\'\x1f8p\xbe\'\'OlI\xb3\xe3\\x1a\x0cg(\x95\x7f\'',
         () => pg`SELECT e'${ blob }'`
       );
     });
@@ -322,16 +322,28 @@ describe('pg template tag', () => {
     });
     it('$foo$ hazard', () => {
       expect(() => pg`SELECT $foo$${ '$foo$' }$foo$`).to.throw(Error, 'Cannot embed ');
-      expect(() => pg`SELECT $foo$${ '$fOo$' }$foo$`).to.throw(Error, 'Cannot embed ');
       expect(() => pg`SELECT $foo$${ 'x$foo$x' }$foo$`).to.throw(Error, 'Cannot embed ');
       expect(() => pg`SELECT $foo$${ 'x$fo' }$foo$`).to.throw(Error, 'Cannot embed ');
+
+      expect(() => pg`SELECT $foo$${ '$fOo$x' }$foo$`).to.not.throw();
+    });
+    it('mixed case hazard', () => {
+      // OK
+      runTagTest(
+        'SELECT $foo$ $foo$, e\'\\$foo\\$\', "$foo$--"\n',
+        () => pg`SELECT $foo$ $foo$, ${ '$foo$' }, "$foo$--"
+`);
+      // Mixed case matters
+      expect(() => pg`SELECT $foo$ $Foo$, ${ '$foo$' } "$foo$--"
+`)
+        .to.throw(Error, 'Cannot embed ');
     });
   });
   describe('continued-strings', () => {
     const line = [ 'haven\'t', 'have too', 'have not! n\'t!' ];
     it('e', () => {
       runTagTest(
-        'SELECT e\'\' \'haven\\\'t\'\n  \'have too\'\n  \'have not! n\\\'t!\'',
+        'SELECT e\'\' \'haven\'\'t\'\n  \'have too\'\n  \'have not! n\'\'t!\'',
         () =>
           pg`SELECT e'' ${ line[0] }
   ${ line[1] }

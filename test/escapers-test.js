@@ -212,7 +212,7 @@ function testEscapes(target, { escape, escapeId }) {
         return 'f\'oo';
       } } })).to.equal({
         mysql: '`a` = \'f\\\'oo\'',
-        pg: '"a" = e\'f\\\'oo\'',
+        pg: '"a" = e\'f\'\'oo\'',
       }[target]);
     });
 
@@ -364,12 +364,12 @@ function testEscapes(target, { escape, escapeId }) {
     it('single quotes get escaped', () => {
       expect(escape('Sup\'er')).to.equal({
         mysql: '\'Sup\\\'er\'',
-        pg: 'e\'Sup\\\'er\'',
+        pg: 'e\'Sup\'\'er\'',
       }[target]);
 
       expect(escape('Super\'')).to.equal({
         mysql: '\'Super\\\'\'',
-        pg: 'e\'Super\\\'\'',
+        pg: 'e\'Super\'\'\'',
       }[target]);
     });
 
