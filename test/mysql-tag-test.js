@@ -55,7 +55,7 @@ function runTagTest(golden, test) {
   }
 }
 
-describe('template tag', () => {
+describe('mysql template tag', () => {
   it('numbers', () => {
     runTagTest(
       'SELECT 2',

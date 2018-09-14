@@ -73,14 +73,14 @@ describe('pg template lexer', () => {
   it('U&dq', () => {
     expect(tokens('SELECT U&"foo"')).to.equal('_');
     expect(tokens('SELECT `foo`, U&"foo"')).to.equal('_');
-    expect(tokens('SELECT U&"', '"')).to.equal('U&",_');
-    expect(tokens('SELECT U&"x', '"')).to.equal('U&",_');
-    expect(tokens('SELECT U&"\'', '"')).to.equal('U&",_');
-    expect(tokens('SELECT U&"`', '"')).to.equal('U&",_');
-    expect(tokens('SELECT U&"""', '"')).to.equal('U&",_');
+    expect(tokens('SELECT U&"', '"')).to.equal('u&",_');
+    expect(tokens('SELECT U&"x', '"')).to.equal('u&",_');
+    expect(tokens('SELECT U&"\'', '"')).to.equal('u&",_');
+    expect(tokens('SELECT U&"`', '"')).to.equal('u&",_');
+    expect(tokens('SELECT U&"""', '"')).to.equal('u&",_');
     // C-style escape sequences not supported in double
     // quoted strings unless U&
-    expect(tokens('SELECT U&"\\"', '"')).to.equal('U&",_');
+    expect(tokens('SELECT U&"\\"', '"')).to.equal('u&",_');
     expect(() => tokens('SELECT U&"\\')).to.throw();
   });
   it('sq', () => {
@@ -96,14 +96,14 @@ describe('pg template lexer', () => {
   it('Esq', () => {
     expect(tokens('SELECT E\'foo\'')).to.equal('e');
     expect(tokens('SELECT E\'foo\';')).to.equal('_');
-    expect(tokens('SELECT E\'foo')).to.equal('E\'');
+    expect(tokens('SELECT E\'foo')).to.equal('e\'');
     expect(tokens('SELECT `foo`, E\'foo\';')).to.equal('_');
-    expect(tokens('SELECT E\'', '\';')).to.equal('E\',_');
-    expect(tokens('SELECT E\'x', '\';')).to.equal('E\',_');
-    expect(tokens('SELECT E\'"', '\';')).to.equal('E\',_');
-    expect(tokens('SELECT E\'`', '\';')).to.equal('E\',_');
-    expect(tokens('SELECT E\'\'\'', '\';')).to.equal('E\',_');
-    expect(tokens('SELECT E\'\\\'', '\';')).to.equal('E\',_');
+    expect(tokens('SELECT E\'', '\';')).to.equal('e\',_');
+    expect(tokens('SELECT E\'x', '\';')).to.equal('e\',_');
+    expect(tokens('SELECT E\'"', '\';')).to.equal('e\',_');
+    expect(tokens('SELECT E\'`', '\';')).to.equal('e\',_');
+    expect(tokens('SELECT E\'\'\'', '\';')).to.equal('e\',_');
+    expect(tokens('SELECT E\'\\\'', '\';')).to.equal('e\',_');
     expect(tokens('SELECT e\'\\\'', '\';')).to.equal('e\',_');
     // e' applies to subsequent single quoted strings.
     // 4.1.2.2. String Constants with C-style Escapes
@@ -119,12 +119,12 @@ describe('pg template lexer', () => {
   it('U&sq', () => {
     expect(tokens('SELECT U&\'foo\'')).to.equal('_');
     expect(tokens('SELECT `foo`, U&\'foo\'')).to.equal('_');
-    expect(tokens('SELECT U&\'', '\'')).to.equal('U&\',_');
-    expect(tokens('SELECT U&\'x', '\'')).to.equal('U&\',_');
-    expect(tokens('SELECT U&\'"', '\'')).to.equal('U&\',_');
-    expect(tokens('SELECT U&\'`', '\'')).to.equal('U&\',_');
-    expect(tokens('SELECT U&\'\'\'', '\'')).to.equal('U&\',_');
-    expect(tokens('SELECT U&\'\\\'', '\'')).to.equal('U&\',_');
+    expect(tokens('SELECT U&\'', '\'')).to.equal('u&\',_');
+    expect(tokens('SELECT U&\'x', '\'')).to.equal('u&\',_');
+    expect(tokens('SELECT U&\'"', '\'')).to.equal('u&\',_');
+    expect(tokens('SELECT U&\'`', '\'')).to.equal('u&\',_');
+    expect(tokens('SELECT U&\'\'\'', '\'')).to.equal('u&\',_');
+    expect(tokens('SELECT U&\'\\\'', '\'')).to.equal('u&\',_');
     expect(tokens('SELECT u&\'\\\'', '\'')).to.equal('u&\',_');
   });
   it('$$', () => {
@@ -164,6 +164,6 @@ describe('pg template lexer', () => {
   it('unfinished escape squence', () => {
     const lexer = pgLexer.makeLexer();
     expect(() => lexer('SELECT E\'\\')).to.throw(
-      Error, 'Incomplete escape sequence in E\' delimited string at `\\`');
+      Error, 'Incomplete escape sequence in e\' delimited string at `\\`');
   });
 });

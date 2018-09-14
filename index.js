@@ -22,10 +22,15 @@ require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
 const {
   mysql: {
     escape: mysqlEscape,
-    escapeId: mysqlEscapeId,
+    escapeDelimited: mysqlEscapeDelimited,
+  },
+  pg: {
+    escape: pgEscape,
+    escapeDelimited: pgEscapeDelimited,
   },
 } = require('./lib/escapers.js');
 const mysqlLexer = require('./lib/mysql-lexer.js');
+const pgLexer = require('./lib/pg-lexer.js');
 const { SqlFragment } = require('./fragment.js');
 
 const { Mintable } = require('node-sec-patterns');
@@ -64,7 +69,8 @@ function prepareStrings(strings) {
 function makeSqlTagFunction(
   { makeLexer },
   escape,
-  escapeDelimitedValue) {
+  escapeDelimitedValue,
+  fixupBackticks) {
   /**
    * Analyzes the static parts of the tag content.
    *
@@ -78,21 +84,17 @@ function makeSqlTagFunction(
    *     the adjusted raw text.
    */
   function computeStatic(strings) {
-    const chunks = prepareStrings(strings);
+    const chunks = fixupBackticks ? prepareStrings(strings) : strings.raw;
     const lexer = makeLexer();
 
     const delimiters = [];
-    let delimiter = null;
     for (let i = 0, len = chunks.length; i < len; ++i) {
       const chunk = String(chunks[i]);
-      const newDelimiter = lexer(chunk);
-      delimiters.push(newDelimiter);
-      delimiter = newDelimiter;
+      delimiters.push(lexer(chunk));
     }
 
-    if (delimiter) {
-      throw new Error(`Unclosed quoted string: ${ delimiter }`);
-    }
+    // Signal end of input.
+    lexer(null);
 
     return { delimiters, chunks };
   }
@@ -144,16 +146,5 @@ function makeSqlTagFunction(
   return memoizedTagFunction(computeStatic, interpolateSqlIntoFragment);
 }
 
-function mysqlEscapeDelimitedValue(value, delimiter, timeZone, forbidQualified) {
-  if (delimiter === '`') {
-    return mysqlEscapeId(value, forbidQualified).replace(/^`|`$/g, '');
-  }
-  if (Buffer.isBuffer(value)) {
-    value = value.toString('binary');
-  }
-  const escaped = mysqlEscape(String(value), true, timeZone);
-  return escaped.substring(1, escaped.length - 1);
-}
-
-module.exports.mysql = makeSqlTagFunction(
-  mysqlLexer, mysqlEscape, mysqlEscapeDelimitedValue);
+module.exports.mysql = makeSqlTagFunction(mysqlLexer, mysqlEscape, mysqlEscapeDelimited, true);
+module.exports.pg = makeSqlTagFunction(pgLexer, pgEscape, pgEscapeDelimited, false);

@@ -23,13 +23,9 @@ require('module-keys/cjs').polyfill(module, require, 'safesql/test/escaper-test.
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const { Mintable } = require('node-sec-patterns');
 
-const { mysql } = require('../index.js');
-const { SqlId } = require('../id.js');
+const { mysql, pg } = require('../index.js');
 const escapers = require('../lib/escapers.js');
-
-const mintId = require.keys.unboxStrict(Mintable.minterFor(SqlId), () => true);
 
 describe('escapers', () => {
   for (const target of [ 'mysql', 'pg' ]) {
@@ -124,14 +120,17 @@ function testEscapes(target, { escape, escapeId }) {
       }[target]);
     });
 
-    it('rejects qualified id', () => {
-      const qualifiedId = mintId(escapeId('id1.id2', false));
-      expect(() => escapeId(qualifiedId, true)).to.throw();
-    });
-
-    it('allow qualified id', () => {
-      const qualifiedId = mintId(escapeId('id1.id2', false));
-      expect(() => escapeId(qualifiedId, false)).to.not.throw();
+    describe('qualified id to escapeId', () => {
+      const qualifiedId = {
+        mysql: mysql`\`id1\`.\`id2\``,
+        pg: pg`"id1"."id2"`,
+      }[target];
+      it('rejects', () => {
+        expect(() => escapeId(qualifiedId, true)).to.throw();
+      });
+      it('allow', () => {
+        expect(() => escapeId(qualifiedId, false)).to.not.throw();
+      });
     });
   });
 
@@ -472,3 +471,17 @@ function testEscapes(target, { escape, escapeId }) {
     });
   });
 }
+
+describe('all delimiters', () => {
+  const { escapeDelimited } = escapers.pg;
+  it('ok', () => {
+    for (const okDelim of [ '\'', '"', 'u&"', 'u&\'', 'b\'', 'x\'', 'e\'', '$$', '$foo$' ]) {
+      expect(() => escapeDelimited('x', okDelim, null, false)).to.not.throw();
+    }
+  });
+  it('bad', () => {
+    for (const badDelim of [ '', '?', '$x', '$$$', 'z\'' ]) {
+      expect(() => escapeDelimited('x', badDelim, null, false)).to.throw(Error, 'Cannot escape');
+    }
+  });
+});
