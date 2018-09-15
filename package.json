@@ -23,7 +23,7 @@
     "cover": "istanbul cover _mocha",
     "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
     "lint": "./node_modules/.bin/eslint .",
-    "prepack": "npm run lint && npm test && ./scripts/make-md-toc.pl",
+    "prepack": "npm run lint && npm test && ./scripts/make-md-toc.pl README.md",
     "test": "mocha"
   },
   "pre-commit": [

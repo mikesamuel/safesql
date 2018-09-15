@@ -19,14 +19,17 @@ appear.
 <!-- TOC -->
 
 *  [Installation](#installation)
+*  [Supported Databases](#supported)
 *  [Usage By Example](#usage)
-   *  [`sql` returns a *SqlFragment*](#sql-returns-sqlfragment)
+   *  [`mysql` returns a *SqlFragment*](#sql-returns-sqlfragment)
    *  [No excess quotes](#minimal-quotes)
    *  [Escaped backticks delimit SQL identifiers](#escaped-backticks)
    *  [Escape Sequences are Raw](#raw-escapes)
 *  [API](#API)
-   *  [sql(options)](#sql-options)
-   *  [sql\`...\`](#sql-as-tag)
+   *  [mysql(options)](#mysql-options)
+   *  [pgsql(options)](#pg-options)
+   *  [mysql\`...\`](#mysql-as-tag)
+   *  [pg\`...\`](#pg-as-tag)
    *  [SqlFragment](#class-SqlFragment)
    *  [SqlId](#class-SqlId)
 
@@ -66,8 +69,8 @@ be sure to reflect changes there.
 const { mysql, SqlId } = require('safesql');
 
 const table = 'table';
-const ids   = [ 'x', 'y', 'z' ];
-const str   = 'foo\'\"bar';
+const ids = [ 'x', 'y', 'z' ];
+const str = 'foo\'"bar';
 
 const query = mysql`SELECT * FROM \`${ table }\` WHERE id IN (${ ids }) AND s=${ str }`;
 
@@ -85,20 +88,27 @@ A `${...}` outside any quotes will be escaped and wrapped in appropriate quotes 
 
 ----
 
+PostgreSQL differs from MySQL in important ways.  Use `pg` for Postgres.
+
 ```js
 const { pg, SqlId } = require('safesql');
 
 const table = 'table';
-const ids   = [ 'x', 'y', 'z' ];
-const str   = 'foo\'\"bar';
+const ids = [ 'x', 'y', 'z' ];
+const str = 'foo\'"bar';
 
 const query = pg`SELECT * FROM "${ table }" WHERE id IN (${ ids }) AND s=${ str }`;
 
 console.log(query);
-// SELECT * FROM "table" WHERE id IN ('x', 'y', 'z') AND s='foo''"bar'
+// SELECT * FROM "table" WHERE id IN ('x', 'y', 'z') AND s=e'foo''\"bar'
 ```
 
 ----
+
+You can pass in an object to relate columns to values as in a `SET` clause above.
+
+The output of <tt>mysql\`...\`</tt> has type *SqlFragment* so the
+`NOW()` function call is not re-escaped when used in `${data}`.
 
 ```js
 const { mysql } = require('safesql');
@@ -114,11 +124,6 @@ const query = mysql`UPDATE \`${column}\` SET ${data} WHERE \`id\` = ${userId}`;
 console.log(query);
 // UPDATE `users` SET `email` = 'foobar@example.com', `modified` = NOW() WHERE `id` = 1
 ```
-
-You can pass in an object to relate columns to values as in a `SET` clause above.
-
-The output of <tt>mysql\`...\`</tt> has type *SqlFragment* so the
-`NOW()` function call is not re-escaped when used in `${data}`.
 
 ### `mysql` returns a *SqlFragment*        <a name="sql-returns-sqlfragment"></a>
 
@@ -202,7 +207,7 @@ convention for each `${...}` based on the context in which it appears.
 `mysql` handles `${...}` inside quoted strings as if the template
 matched the following grammar:
 
-[![Railroad Diagram](docs/mysql-railroad.svg)](docs/mysql-railroad.svg)
+[![Railroad Diagram][mysql-railroad-raw]][mysql-railroad]
 
 ### pg\`...\`         <a name="pg-as-tag"></a>
 
@@ -212,7 +217,7 @@ convention for each `${...}` based on the context in which it appears.
 `pg` handles `${...}` inside quoted strings as if the template
 matched the following grammar:
 
-[![Railroad Diagram](docs/mysql-railroad.svg)](docs/ph-railroad.svg)
+[![Railroad Diagram][pg-railroad-raw]][pg-railroad]
 
 ### SqlFragment       <a name="class-SqlFragment"></a>
 
@@ -238,3 +243,8 @@ creators should not rely on case folding by the database client.
 [sqlstring]: https://www.npmjs.com/package/sqlstring
 [Mintable]: https://www.npmjs.com/package/node-sec-patterns
 [minting]: https://www.npmjs.com/package/node-sec-patterns#creating-mintable-values
+
+[mysql-railroad]: docs/mysql-railroad.svg
+[mysql-railroad-raw]: https://raw.githubusercontent.com/mikesamuel/safesql/master/docs/mysql-railroad.svg
+[pg-railroad]: docs/pg-railroad.svg
+[pg-railroad-raw]: https://raw.githubusercontent.com/mikesamuel/safesql/master/docs/pg-railroad.svg

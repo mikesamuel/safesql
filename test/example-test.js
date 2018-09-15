@@ -22,22 +22,34 @@
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
 
-const { mysql } = require('../index.js');
+const { mysql, pg } = require('../index.js');
 
 describe('example code', () => {
   describe('README.md', () => {
     // These mirror example code in ../README.md so if you modify this,
     // be sure to reflect changes there.
 
-    it('SELECT various', () => {
-      const table = 'table';
-      const ids = [ 'x', 'y', 'z' ];
-      const str = 'foo\'"bar';
+    describe('SELECT various', () => {
+      it('mysql', () => {
+        const table = 'table';
+        const ids = [ 'x', 'y', 'z' ];
+        const str = 'foo\'"bar';
 
-      const query = mysql`SELECT * FROM \`${ table }\` WHERE id IN (${ ids }) AND s=${ str }`;
+        const query = mysql`SELECT * FROM \`${ table }\` WHERE id IN (${ ids }) AND s=${ str }`;
 
-      expect(query.content).to.equal(
-        String.raw`SELECT * FROM ${ '`table`' } WHERE id IN ('x', 'y', 'z') AND s='foo\'\"bar'`);
+        expect(query.content).to.equal(
+          'SELECT * FROM `table` WHERE id IN (\'x\', \'y\', \'z\') AND s=\'foo\\\'\\"bar\'');
+      });
+      it('pg', () => {
+        const table = 'table';
+        const ids = [ 'x', 'y', 'z' ];
+        const str = 'foo\'"bar';
+
+        const query = pg`SELECT * FROM "${ table }" WHERE id IN (${ ids }) AND s=${ str }`;
+
+        expect(query.content).to.equal(
+          String.raw`SELECT * FROM "table" WHERE id IN ('x', 'y', 'z') AND s=e'foo''\"bar'`);
+      });
     });
     it('UPDATE obj', () => {
       const column = 'users';
@@ -66,8 +78,14 @@ describe('example code', () => {
         'SELECT `id` FROM `TABLE`');
     });
     it('raw escapes', () => {
-      expect(mysql`SELECT "\n"`.content).to.equal(
-        String.raw`SELECT "\n"`);
+      expect(mysql`SELECT "\n"`.content)
+        .to.equal(String.raw`SELECT "\n"`);
+    });
+    it('dates', () => {
+      const timeZone = 'GMT';
+      const date = new Date(Date.UTC(2000, 0, 1)); // eslint-disable-line no-magic-numbers
+      expect(mysql({ timeZone })`SELECT ${ date }`.content)
+        .to.equal('SELECT \'2000-01-01 00:00:00.000\'');
     });
   });
 });
