@@ -245,6 +245,6 @@ creators should not rely on case folding by the database client.
 [minting]: https://www.npmjs.com/package/node-sec-patterns#creating-mintable-values
 
 [mysql-railroad]: docs/mysql-railroad.svg
-[mysql-railroad-raw]: https://raw.githubusercontent.com/mikesamuel/safesql/master/docs/mysql-railroad.svg
+[mysql-railroad-raw]: https://rawgit.com/mikesamuel/safesql/master/docs/mysql-railroad.svg
 [pg-railroad]: docs/pg-railroad.svg
-[pg-railroad-raw]: https://raw.githubusercontent.com/mikesamuel/safesql/master/docs/pg-railroad.svg
+[pg-railroad-raw]: https://rawgit.com/mikesamuel/safesql/master/docs/pg-railroad.svg
