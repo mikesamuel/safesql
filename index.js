@@ -19,132 +19,56 @@
 
 require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
 
-const {
-  mysql: {
-    escape: mysqlEscape,
-    escapeDelimited: mysqlEscapeDelimited,
-  },
-  pg: {
-    escape: pgEscape,
-    escapeDelimited: pgEscapeDelimited,
-  },
-} = require('./lib/escapers.js');
-const mysqlLexer = require('./lib/mysql-lexer.js');
-const pgLexer = require('./lib/pg-lexer.js');
-const { SqlFragment } = require('./fragment.js');
-
+const { SqlFragment } = require('./lib/fragment.js');
+const { SqlId } = require('./lib/id.js');
+const { makeSqlTagFunction } = require('./lib/tag-fn.js');
 const { Mintable } = require('node-sec-patterns');
-const {
-  memoizedTagFunction,
-  trimCommonWhitespaceFromLines,
-} = require('template-tag-common');
-
-const LITERAL_BACKTICK_FIXUP_PATTERN = /((?:[^\\]|\\[^`])+)|\\(`)(?!`)/g;
 
 const mintSqlFragment = require.keys.unbox(
   Mintable.minterFor(SqlFragment),
   () => true,
   String);
 
-/**
- * Trims common whitespace and converts escaped backticks
- * to backticks as appropriate.
- *
- * @param {!Array.<string>} strings a valid TemplateObject.
- * @return {!Array.<string>} the adjusted raw strings.
- */
-function prepareStrings(strings) {
-  const raw = trimCommonWhitespaceFromLines(strings).raw.slice();
-  for (let i = 0, len = raw.length; i < len; ++i) {
-    // Convert \` to ` but leave  \\` alone.
-    raw[i] = raw[i].replace(LITERAL_BACKTICK_FIXUP_PATTERN, '$1$2');
-  }
-  return raw;
-}
+let mysql = null;
+let pg = null; // eslint-disable-line id-length
 
-/**
- * Returns a template tag function that contextually autoescapes values
- * producing a SqlFragment.
- */
-function makeSqlTagFunction(
-  { makeLexer },
-  escape,
-  escapeDelimitedValue,
-  fixupBackticks) {
-  /**
-   * Analyzes the static parts of the tag content.
-   *
-   * @param {!Array.<string>} strings a valid TemplateObject.
-   * @return { !{
-   *       delimiters : !Array.<string>,
-   *       chunks: !Array.<string>
-   *     } }
-   *     A record like { delimiters, chunks }
-   *     where delimiter is a contextual cue and chunk is
-   *     the adjusted raw text.
-   */
-  function computeStatic(strings) {
-    const chunks = fixupBackticks ? prepareStrings(strings) : strings.raw;
-    const lexer = makeLexer();
-
-    const delimiters = [];
-    for (let i = 0, len = chunks.length; i < len; ++i) {
-      const chunk = String(chunks[i]);
-      delimiters.push(lexer(chunk));
-    }
-
-    // Signal end of input.
-    lexer(null);
-
-    return { delimiters, chunks };
-  }
-
-  function defangMergeHazard(before, escaped, after) {
-    const escapedLast = escaped[escaped.length - 1];
-    if ('"\'`'.indexOf(escapedLast) < 0) {
-      // Not a merge hazard.
-      return escaped;
-    }
-
-    let escapedSetOff = escaped;
-    const lastBefore = before[before.length - 1];
-    if (escapedLast === escaped[0] && escapedLast === lastBefore) {
-      escapedSetOff = ` ${ escapedSetOff }`;
-    }
-    if (escapedLast === after[0]) {
-      escapedSetOff += ' ';
-    }
-    return escapedSetOff;
-  }
-
-  function interpolateSqlIntoFragment(
-    { stringifyObjects, timeZone, forbidQualified },
-    { delimiters, chunks },
-    strings, values) {
-    // A buffer to accumulate output.
-    let [ result ] = chunks;
-    for (let i = 1, len = chunks.length; i < len; ++i) {
-      const chunk = chunks[i];
-      // The count of values must be 1 less than the surrounding
-      // chunks of literal text.
-      const delimiter = delimiters[i - 1];
-      const value = values[i - 1];
-
-      const escaped = delimiter ?
-        escapeDelimitedValue(value, delimiter, timeZone, forbidQualified) :
-        defangMergeHazard(
-          result,
-          escape(value, stringifyObjects, timeZone),
-          chunk);
-
-      result += escaped + chunk;
-    }
-
-    return mintSqlFragment(result);
-  }
-
-  return memoizedTagFunction(computeStatic, interpolateSqlIntoFragment);
-}
-
-module.exports.mysql = makeSqlTagFunction(mysqlLexer, mysqlEscape, mysqlEscapeDelimited, true);
-module.exports.pg = makeSqlTagFunction(pgLexer, pgEscape, pgEscapeDelimited, false);
+Object.defineProperties(module.exports, {
+  mysql: {
+    // Lazily load MySQL machinery since
+    // PG users are unlikely to use MySQL and vice-versa.
+    get() {
+      if (!mysql) {
+        // eslint-disable-next-line global-require
+        const lexer = require('./lib/mysql-lexer.js');
+        // eslint-disable-next-line global-require
+        const { escape, escapeDelimited } = require('./lib/mysql-escaper.js');
+        mysql = makeSqlTagFunction(
+          lexer, escape, escapeDelimited, true, mintSqlFragment);
+      }
+      return mysql;
+    },
+    enumerable: true,
+  },
+  pg: {
+    get() {
+      if (!pg) {
+        // eslint-disable-next-line global-require
+        const lexer = require('./lib/pg-lexer.js');
+        // eslint-disable-next-line global-require
+        const { escape, escapeDelimited } = require('./lib/pg-escaper.js');
+        pg = makeSqlTagFunction(
+          lexer, escape, escapeDelimited, false, mintSqlFragment);
+      }
+      return pg;
+    },
+    enumerable: true,
+  },
+  SqlId: {
+    value: SqlId,
+    enumerable: true,
+  },
+  SqlFragment: {
+    value: SqlFragment,
+    enumerable: true,
+  },
+});

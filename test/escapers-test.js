@@ -25,7 +25,12 @@ const { expect } = require('chai');
 const { describe, it } = require('mocha');
 
 const { mysql, pg } = require('../index.js');
-const escapers = require('../lib/escapers.js');
+const mysqlEscaper = require('../lib/mysql-escaper.js');
+const pgEscaper = require('../lib/pg-escaper.js');
+const escapers = {
+  mysql: mysqlEscaper,
+  pg: pgEscaper,
+};
 
 describe('escapers', () => {
   for (const target of [ 'mysql', 'pg' ]) {

@@ -38,6 +38,21 @@ appear.
 $ npm install safesql
 ```
 
+## Supported Databases     <a name="supported"></a>
+
+**MySQL** via
+
+```js
+const { mysql } = require('safesql');
+```
+
+**PostgreSQL** via
+
+```js
+const { pg } = require('safesql');
+```
+
+
 ## Usage By Example        <a name="usage"></a>
 
 <!--
@@ -48,8 +63,7 @@ be sure to reflect changes there.
 -->
 
 ```js
-const { sql } = require('safesql');
-const { SqlId } = require('safesql/id');
+const { mysql, SqlId } = require('safesql');
 
 const table = 'table';
 const ids   = [ 'x', 'y', 'z' ];
@@ -72,7 +86,22 @@ A `${...}` outside any quotes will be escaped and wrapped in appropriate quotes 
 ----
 
 ```js
-const { sql } = require('safesql');
+const { pg, SqlId } = require('safesql');
+
+const table = 'table';
+const ids   = [ 'x', 'y', 'z' ];
+const str   = 'foo\'\"bar';
+
+const query = pg`SELECT * FROM "${ table }" WHERE id IN (${ ids }) AND s=${ str }`;
+
+console.log(query);
+// SELECT * FROM "table" WHERE id IN ('x', 'y', 'z') AND s='foo''"bar'
+```
+
+----
+
+```js
+const { mysql } = require('safesql');
 
 const column  = 'users';
 const userId  = 1;
@@ -88,16 +117,15 @@ console.log(query);
 
 You can pass in an object to relate columns to values as in a `SET` clause above.
 
-The output of <tt>sql\`...\`</tt> has type *SqlFragment* (from
-`require('safesql/fragment')`) so the `NOW()` function call is not
-re-escaped when used in `${data}`.
+The output of <tt>mysql\`...\`</tt> has type *SqlFragment* so the
+`NOW()` function call is not re-escaped when used in `${data}`.
 
 ### `mysql` returns a *SqlFragment*        <a name="sql-returns-sqlfragment"></a>
 
 Since `mysql` returns a *SqlFragment* you can chain uses:
 
 ```js
-const { sql } = require('safesql');
+const { mysql } = require('safesql');
 
 const data = { a: 1 };
 const whereClause = mysql`WHERE ${data}`;
@@ -110,7 +138,7 @@ console.log(mysql`SELECT * FROM TABLE ${whereClause}`);
 An interpolation in a quoted string will not insert excess quotes:
 
 ```js
-const { sql } = require('safesql')
+const { mysql } = require('safesql')
 
 console.log(mysql`SELECT '${ 'foo' }' `)
 // SELECT 'foo'
@@ -123,7 +151,7 @@ console.log(mysql`SELECT ${ 'foo' } `)
 Backticks end a template tag, so you need to escape backticks.
 
 ```js
-const { sql } = require('safesql')
+const { mysql } = require('safesql')
 
 console.log(mysql`SELECT \`${ 'id' }\` FROM \`TABLE\``)
 // SELECT `id` FROM `TABLE`
@@ -134,7 +162,7 @@ console.log(mysql`SELECT \`${ 'id' }\` FROM \`TABLE\``)
 Other escape sequences are raw.
 
 ```js
-const { sql } = require('safesql')
+const { mysql } = require('safesql')
 
 console.log(mysql`SELECT "\n"`)
 // SELECT "\n"
@@ -145,9 +173,7 @@ console.log(mysql`SELECT "\n"`)
 Assuming
 
 ```js
-const { sql } = require('safesql')
-const { SqlFragment } = require('safesql/fragment')
-const { SqlId } = require('safesql/id')
+const { mysql, pg, SqlFragment, SqlId } = require('safesql')
 ```
 
 ### mysql(options)        <a name="mysql-options"></a>
@@ -202,6 +228,9 @@ tad more involved than just using `new`.
 
 See [minting][] for example on how to create instances, and why this is a
 tad more involved than just using `new`.
+
+A `SqlId`'s content must be the raw text of a SQL identifier and
+creators should not rely on case folding by the database client.
 
 
 [mysql]: https://www.npmjs.com/package/mysql

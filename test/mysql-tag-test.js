@@ -23,9 +23,7 @@ require('module-keys/cjs').polyfill(module, require, 'safesql/test/safesql-test.
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const { mysql } = require('../index.js');
-const { SqlFragment } = require('../fragment.js');
-const { SqlId } = require('../id.js');
+const { mysql, SqlFragment, SqlId } = require('../index.js');
 
 const { Mintable } = require('node-sec-patterns');
 
