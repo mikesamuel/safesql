@@ -94,7 +94,7 @@ Diagram(
 -->
 
 
-<svg class="railroad-diagram" width="764" height="729" viewBox="0 0 940 756"
+<svg class="railroad-diagram" width="932" height="668" viewBox="0 0 932 668"
      xmlns="http://www.w3.org/2000/svg">
   <defs><style>
 svg.railroad-diagram {
