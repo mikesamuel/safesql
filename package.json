@@ -19,6 +19,12 @@
     "index.js",
     "lib/*.js"
   ],
+  "mintable": {
+    "selfNominate": [
+      "safesql/fragment",
+      "safesql/id"
+    ]
+  },
   "scripts": {
     "cover": "istanbul cover _mocha",
     "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
