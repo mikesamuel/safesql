@@ -39,7 +39,7 @@
     "url": "https://github.com/mikesamuel/safesql/issues"
   },
   "dependencies": {
-    "template-tag-common": "^4.0.0"
+    "template-tag-common": "^4.0.3"
   },
   "devDependencies": {
     "chai": "^4.1.2",
