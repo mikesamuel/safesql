@@ -17,7 +17,7 @@
 
 'use strict';
 
-require('module-keys/cjs').polyfill(module, require, 'safesql/index.js');
+require('module-keys/cjs').polyfill(module, require);
 
 const { SqlFragment } = require('./lib/fragment.js');
 const { SqlId } = require('./lib/id.js');
