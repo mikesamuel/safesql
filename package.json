@@ -1,6 +1,6 @@
 {
   "name": "safesql",
-  "description": "string template tags for safely composing shell strings",
+  "description": "string template tags for safely composing MySQL and PostgreSQL query strings",
   "keywords": [
     "sql",
     "security",
