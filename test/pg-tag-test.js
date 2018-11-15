@@ -360,32 +360,33 @@ describe('pg template tag', () => {
     const cases = [
       {
         metachar: '\'',
-        want: String.raw`SELECT '''', u&'${ '\\' }0027', e''''`,
+        want: String.raw`SELECT '''' AS "'", u&'${ '\\' }0027' AS u&"${ '\\' }0027", e''''`,
       },
       {
         metachar: '"',
-        want: String.raw`SELECT '"', u&'${ '\\' }0022', e'\"'`,
+        want: String.raw`SELECT '"' AS """", u&'${ '\\' }0022' AS u&"${ '\\' }0022", e'\"'`,
       },
       {
         metachar: '\0',
-        want: String.raw`SELECT '', u&'', e''`,
+        want: String.raw`SELECT '' AS "", u&'' AS u&"", e''`,
       },
       {
         metachar: '\\',
-        want: String.raw`SELECT '\', u&'${ '\\' }005c', e'\\'`,
+        want: String.raw`SELECT '\' AS "\", u&'${ '\\' }005c' AS u&"${ '\\' }005c", e'\\'`,
       },
       {
         metachar: '\n',
-        want: String.raw`SELECT '${ '\n' }', u&'${ '\\' }000a', e'\n'`,
+        want: String.raw`SELECT '${ '\n' }' AS "${ '\n' }", u&'${ '\\' }000a' AS u&"${ '\\' }000a", e'\n'`,
       },
       {
         metachar: '',
-        want: String.raw`SELECT '', u&'', e''`,
+        want: String.raw`SELECT '' AS "", u&'' AS u&"", e''`,
       },
     ];
     for (const { metachar, want } of cases) {
       it(`Escaping of ${ JSON.stringify(metachar) }`, () => {
-        const got = pg`SELECT '${ metachar }', u&'${ metachar }', e'${ metachar }'`;
+        const got =
+          pg`SELECT '${ metachar }' AS "${ metachar }", u&'${ metachar }' AS u&"${ metachar }", e'${ metachar }'`;
         expect(got.content).to.equal(want, metachar);
         // TODO: maybe try to actually issue queries and check the results.
         // 15 Nov 2019 - manually checked the wanted SQL against psql (PostgreSQL) 10.5
