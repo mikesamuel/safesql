@@ -356,4 +356,41 @@ describe('pg template tag', () => {
         .to.throw(Error, 'Potential for ambiguous string continuation');
     });
   });
+  describe('meta-chars', () => {
+    const cases = [
+      {
+        metachar: '\'',
+        want: String.raw`SELECT '''', u&'${ '\\' }0027', e''''`,
+      },
+      {
+        metachar: '"',
+        want: String.raw`SELECT '"', u&'${ '\\' }0022', e'\"'`,
+      },
+      {
+        metachar: '\0',
+        want: String.raw`SELECT '', u&'', e''`,
+      },
+      {
+        metachar: '\\',
+        want: String.raw`SELECT '\', u&'${ '\\' }005c', e'\\'`,
+      },
+      {
+        metachar: '\n',
+        want: String.raw`SELECT '${ '\n' }', u&'${ '\\' }000a', e'\n'`,
+      },
+      {
+        metachar: '',
+        want: String.raw`SELECT '', u&'', e''`,
+      },
+    ];
+    for (const { metachar, want } of cases) {
+      it(`Escaping of ${ JSON.stringify(metachar) }`, () => {
+        const got = pg`SELECT '${ metachar }', u&'${ metachar }', e'${ metachar }'`;
+        expect(got.content).to.equal(want, metachar);
+        // TODO: maybe try to actually issue queries and check the results.
+        // 15 Nov 2019 - manually checked the wanted SQL against psql (PostgreSQL) 10.5
+        // conencted to a server with the default configuration produced by initdb.
+      });
+    }
+  });
 });

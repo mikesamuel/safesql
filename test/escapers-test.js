@@ -280,17 +280,17 @@ function testEscapes(target, { escape, escapeId }) {
     it('\\0 gets escaped', () => {
       expect(escape('Sup\u0000er')).to.equal({
         mysql: '\'Sup\\0er\'',
-        pg: 'e\'Sup\\x00er\'',
+        pg: 'e\'Super\'',
       }[target]);
 
       expect(escape('Super\u0000')).to.equal({
         mysql: '\'Super\\0\'',
-        pg: 'e\'Super\\x00\'',
+        pg: 'e\'Super\'',
       }[target]);
 
       expect(escape('Super\u000012')).to.equal({
         mysql: '\'Super\\012\'',
-        pg: 'e\'Super\\x0012\'',
+        pg: 'e\'Super12\'',
       }[target]);
     });
 
