@@ -45,7 +45,7 @@
     "url": "https://github.com/mikesamuel/safesql/issues"
   },
   "dependencies": {
-    "template-tag-common": "^4.0.6"
+    "template-tag-common": "^4.0.7"
   },
   "devDependencies": {
     "chai": "^4.1.2",
