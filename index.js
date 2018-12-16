@@ -19,12 +19,13 @@
 
 require('module-keys/cjs').polyfill(module, require);
 
+const { keysSymbol } = require('module-keys');
 const { SqlFragment } = require('./lib/fragment.js');
 const { SqlId } = require('./lib/id.js');
 const { makeSqlTagFunction } = require('./lib/tag-fn.js');
 const { Mintable } = require('node-sec-patterns');
 
-const mintSqlFragment = require.keys.unbox(
+const mintSqlFragment = require[keysSymbol].unbox(
   Mintable.minterFor(SqlFragment),
   () => true,
   String);
