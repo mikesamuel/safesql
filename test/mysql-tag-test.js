@@ -19,7 +19,7 @@
 
 'use strict';
 
-require('module-keys/cjs').polyfill(module, require, 'safesql/test/safesql-test.js');
+require('module-keys/cjs').polyfill(module, require);
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
@@ -30,7 +30,7 @@ const { Mintable } = require('node-sec-patterns');
 const isSqlFragment = Mintable.verifierFor(SqlFragment);
 
 function unwrapMinterFor(MintableType) {
-  return require.keys.unbox(
+  return require.moduleKeys.unbox(
     Mintable.minterFor(MintableType),
     () => true,
     () => {
